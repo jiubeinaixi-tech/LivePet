@@ -13,10 +13,11 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.2'
+    - name: Download Gradle 8.2
+      run: |
+        curl -sSL https://services.gradle.org/distributions/gradle-8.2-bin.zip -o gradle.zip
+        unzip -q gradle.zip -d /opt
+        ln -s /opt/gradle-8.2/bin/gradle /usr/local/bin/gradle
     - name: Build with Gradle
       run: gradle assembleDebug --no-daemon
     - name: Upload APK
