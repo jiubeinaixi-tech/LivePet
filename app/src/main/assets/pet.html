@@ -1,19 +1,240 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
-    margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent;
-    display: flex; justify-content: center; align-items: center;
+    width: 100%; height: 100%;
+    background: transparent;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
-  img {
-    width: 100%; height: 100%; object-fit: contain; pointer-events: none;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  #pet {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  svg { width: 100%; height: 100%; overflow: visible; }
+
+  /* 呼吸浮动 */
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  #body { animation: floaty 3.2s ease-in-out infinite; transform-origin: center; }
+
+  /* 眨眼的眼睛开关 */
+  .eye-open { opacity: 1; }
+  .eye-blink { opacity: 0; }
+
+  /* 戳一下的脸红与表情 */
+  @keyframes blushIn {
+    0% { opacity: 0; }
+    100% { opacity: 0.85; }
+  }
+  .blush { opacity: 0; }
+  .blush.on { animation: blushIn 0.25s ease forwards; }
+
+  /* 被戳时的整体弹跳 */
+  @keyframes bounce {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.08, 0.92); }
+    65% { transform: scale(0.95, 1.06); }
+    100% { transform: scale(1); }
+  }
+  #body.bounce { animation: bounce 0.45s ease; }
+
+  /* 气泡文字 */
+  #bubble {
+    position: absolute; top: 2%;
+    left: 50%; transform: translateX(-50%);
+    background: #fff; color: #333;
+    font-size: 13px; line-height: 1.4;
+    padding: 6px 12px; border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    white-space: nowrap; max-width: 90%;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  #bubble.show { opacity: 1; transform: translateX(-50%) translateY(-2px); }
+  #bubble::after {
+    content: ""; position: absolute; bottom: -6px; left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent; border-top-color: #fff; border-bottom: 0;
   }
 </style>
 </head>
 <body>
-  <img src="pet.png" alt="LivePet">
+  <div id="pet">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <g id="body">
+        <!-- 尾巴 -->
+        <path d="M170 120 C 195 108 200 92 188 88 C 176 84 168 96 170 120" fill="#3a3a46" stroke="#2c2c36" stroke-width="2"/>
+        <!-- 身体（黑猫团子） -->
+        <ellipse cx="100" cy="120" rx="52" ry="48" fill="#3a3a46" stroke="#2c2c36" stroke-width="2"/>
+        <!-- 左耳 -->
+        <path d="M62 78 L 52 40 L 88 68 Z" fill="#3a3a46" stroke="#2c2c36" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M64 72 L 58 48 L 82 68 Z" fill="#e89ba6"/>
+        <!-- 右耳 -->
+        <path d="M138 78 L 148 40 L 112 68 Z" fill="#3a3a46" stroke="#2c2c36" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M136 72 L 142 48 L 118 68 Z" fill="#e89ba6"/>
+        <!-- 头 -->
+        <circle cx="100" cy="92" r="46" fill="#3a3a46" stroke="#2c2c36" stroke-width="2"/>
+        <!-- 呆毛 -->
+        <path d="M100 46 C 98 34 106 30 112 34" fill="none" stroke="#2c2c36" stroke-width="3" stroke-linecap="round"/>
+
+        <!-- 眼睛（眨动） -->
+        <g class="eye-open">
+          <ellipse cx="82" cy="90" rx="6" ry="8" fill="#f7e8c9"/>
+          <ellipse cx="118" cy="90" rx="6" ry="8" fill="#f7e8c9"/>
+          <ellipse cx="82" cy="92" rx="3" ry="5" fill="#1d1d26"/>
+          <ellipse cx="118" cy="92" rx="3" ry="5" fill="#1d1d26"/>
+        </g>
+        <!-- 闭眼（眨眼与害羞时） -->
+        <g class="eye-blink">
+          <path d="M76 92 Q 82 98 88 92" fill="none" stroke="#1d1d26" stroke-width="3" stroke-linecap="round"/>
+          <path d="M112 92 Q 118 98 124 92" fill="none" stroke="#1d1d26" stroke-width="3" stroke-linecap="round"/>
+        </g>
+
+        <!-- 腮红 -->
+        <ellipse id="blush" class="blush" cx="72" cy="102" rx="8" ry="4.5" fill="#e88a96"/>
+        <ellipse id="blush2" class="blush" cx="128" cy="102" rx="8" ry="4.5" fill="#e88a96"/>
+
+        <!-- 嘴（得意的小弧线 / 被戳时变） -->
+        <path id="mouth" d="M100 106 Q 106 112 100 116 Q 94 112 100 106" fill="none" stroke="#1d1d26" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </svg>
+  </div>
+
+  <div id="bubble"></div>
+
+<script>
+  // ===== 桌宠状态 =====
+  const body = document.getElementById('body');
+  const eyesOpen = document.querySelectorAll('.eye-open');
+  const eyesClosed = document.querySelectorAll('.eye-blink');
+  const blush = Array.from(document.querySelectorAll('.blush'));
+  const m = document.getElementById('mouth');
+  const bubble = document.getElementById('bubble');
+
+  let mood = 'idle';       // idle | happy | shy | tsundere
+  let bubbleTimer = null;
+
+  // 裴羡辞式台词池
+  const LINES = {
+    idle: ['在呢。', '别偷看我。', '嗯？', '……干嘛。', '你才想起我？'],
+    happy: ['哼，勉强。', '碰哪呢。', '就知道你会来。'],
+    shy: ['不许戳。', '……脸红什么，你看错了。', '走开啦。'],
+    tsundere: ['我才没有等你。', '别以为我在意你。', '区区人类。']
+  };
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function setEyes(closed) {
+    eyesOpen.forEach(e => e.classList.toggle('eye-blink', closed));
+    eyesClosed.forEach(e => e.classList.toggle('eye-blink', !closed));
+  }
+
+  function setBlush(on) {
+    blush.forEach(b => b.classList.toggle('on', on));
+  }
+
+  function setMouth(shape) {
+    if (shape === 'smile') {
+      m.setAttribute('d', 'M92 106 Q 100 118 108 106');
+    } else if (shape === 'o') {
+      m.setAttribute('d', 'M100 106 a 4 5 0 1 0 0.1 0');
+    } else if (shape === 'flat') {
+      m.setAttribute('d', 'M94 112 L 106 112');
+    } else {
+      m.setAttribute('d', 'M100 106 Q 106 112 100 116 Q 94 112 100 106');
+    }
+  }
+
+  function say(text, dur = 1600) {
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => bubble.classList.remove('show'), dur);
+  }
+
+  function speak(lineSet) {
+    const text = pick(lineSet);
+    say(text);
+  }
+
+  // ===== 眨眼：随机自然眨 =====
+  function blink() {
+    setEyes(true);
+    setTimeout(() => setEyes(false), 120);
+    scheduleBlink();
+  }
+  function scheduleBlink() {
+    const delay = 1800 + Math.random() * 3000;
+    setTimeout(blink, delay);
+  }
+
+  // ===== 戳一下（原生层会调 window.onTap）=====
+  function onTap() {
+    // 弹跳
+    body.classList.remove('bounce');
+    void body.offsetWidth;
+    body.classList.add('bounce');
+
+    // 情绪轮换：idle -> happy -> shy -> tsundere
+    const seq = ['happy', 'shy', 'tsundere', 'idle'];
+    const idx = seq.indexOf(mood);
+    mood = seq[(idx + 1) % seq.length];
+
+    if (mood === 'shy') {
+      setBlush(true);
+      setEyes(true);
+      setMouth('o');
+    } else if (mood === 'happy') {
+      setBlush(true);
+      setEyes(false);
+      setMouth('smile');
+    } else if (mood === 'tsundere') {
+      setBlush(false);
+      setEyes(false);
+      setMouth('flat');
+    } else {
+      setBlush(false);
+      setEyes(false);
+      setMouth('default');
+    }
+
+    speak(LINES[mood]);
+
+    // 害羞/脸红持续一小会儿再淡下
+    if (mood === 'shy' || mood === 'happy') {
+      setTimeout(() => { if (mood !== 'shy') setBlush(false); }, 1200);
+    }
+    setTimeout(() => { if (mood === 'shy') setEyes(false); }, 900);
+  }
+
+  // 暴露给原生 WebView 调用
+  window.onTap = onTap;
+
+  // ===== 启动 =====
+  setBlush(false);
+  setEyes(false);
+  setMouth('default');
+  scheduleBlink();
+
+  // 隔一会儿偶尔自己嘀咕一句
+  setTimeout(function idleSpeak() {
+    if (mood === 'idle' && Math.random() < 0.5) {
+      speak(LINES.idle);
+    }
+    setTimeout(idleSpeak, 6000 + Math.random() * 6000);
+  }, 5000);
+</script>
 </body>
 </html>
